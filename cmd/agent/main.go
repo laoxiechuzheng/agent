@@ -845,7 +845,7 @@ func handleTcpPingTask(task *pb.Task, result *pb.TaskResult) {
 	addr := net.JoinHostPort(ipAddr, port)
 	printf("TCP-Ping Task: Pinging %s", addr)
 	start := time.Now()
-	conn, err := net.DialTimeout("tcp", addr, time.Second*3)
+	conn, err := net.DialTimeout("tcp", addr, 7*time.Second)
 	if err != nil {
 		result.Data = err.Error()
 	} else {
