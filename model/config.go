@@ -18,6 +18,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const DefaultUpdateRepository = "laoxiechuzheng/agent"
+
 //go:generate go run gen/gen.go -type=AgentConfig
 type AgentConfig struct {
 	Debug bool `koanf:"debug" json:"debug"`
@@ -42,6 +44,7 @@ type AgentConfig struct {
 	UseIPv6CountryCode          bool            `koanf:"use_ipv6_country_code" json:"use_ipv6_country_code"`     // 默认优先展示IPv6旗帜
 	UseGiteeToUpgrade           bool            `koanf:"use_gitee_to_upgrade" json:"use_gitee_to_upgrade"`       // 强制从Gitee获取更新
 	UseAtomGitToUpgrade         bool            `koanf:"use_atomgit_to_upgrade" json:"use_atomgit_to_upgrade"`   // 强制从AtomGit获取更新
+	UpdateRepository            string          `koanf:"update_repository" json:"update_repository"`             // GitHub仓库 owner/repo
 	DisableNat                  bool            `koanf:"disable_nat" json:"disable_nat"`                         // 关闭内网穿透
 	DisableSendQuery            bool            `koanf:"disable_send_query" json:"disable_send_query"`           // 关闭发送TCP/ICMP/HTTP请求
 	IPReportPeriod              uint32          `koanf:"ip_report_period" json:"ip_report_period"`               // IP上报周期
@@ -123,6 +126,15 @@ func (c *AgentConfig) Save() error {
 }
 
 func ValidateConfig(c *AgentConfig, isRemoteEdit bool) error {
+	c.UpdateRepository = strings.TrimSpace(c.UpdateRepository)
+	if c.UpdateRepository == "" {
+		c.UpdateRepository = DefaultUpdateRepository
+	}
+	repositoryParts := strings.Split(c.UpdateRepository, "/")
+	if len(repositoryParts) != 2 || repositoryParts[0] == "" || repositoryParts[1] == "" {
+		return errors.New("update_repository must use the owner/repo format")
+	}
+
 	if c.ReportDelay == 0 {
 		c.ReportDelay = 3
 	}

@@ -536,6 +536,14 @@ func reportGeoIP(parent context.Context, config *model.AgentConfig, options geoI
 	return true
 }
 
+func selfUpdateRepository(config updateConfigTuple) string {
+	repository := strings.TrimSpace(config.updateRepository)
+	if repository == "" {
+		return model.DefaultUpdateRepository
+	}
+	return repository
+}
+
 // doSelfUpdate 执行更新检查 如果更新成功则会结束进程
 func doSelfUpdate(config updateConfigTuple, useLocalVersion bool) (exit bool) {
 	v := semver.MustParse("0.1.0")
@@ -606,56 +614,18 @@ func doSelfUpdate(config updateConfigTuple, useLocalVersion bool) (exit bool) {
 	}()
 
 	printf("检查更新: %v", v)
-	var latest *selfupdate.Release
-	switch {
-	case config.useGiteeToUpgrade:
-		updater, erru := selfupdate.NewGiteeUpdater(selfupdate.Config{
-			BinaryName: binaryName,
-		})
-		if erru != nil {
-			printf("更新失败: %v", erru)
-			return
-		}
-		latest, err = updater.UpdateSelf(v, "naibahq/agent")
-	case config.useAtomGitToUpgrade:
-		updater, erru := selfupdate.NewAtomGitUpdater(selfupdate.Config{
-			BinaryName: binaryName,
-		})
-		if erru != nil {
-			printf("更新失败: %v", erru)
-			return
-		}
-		latest, err = updater.UpdateSelf(v, "naiba/nezha-agent")
-	case monitor.CachedCountryCode() == "cn":
-		if rand.Intn(2) == 0 {
-			updater, erru := selfupdate.NewGiteeUpdater(selfupdate.Config{
-				BinaryName: binaryName,
-			})
-			if erru != nil {
-				printf("更新失败: %v", erru)
-				return
-			}
-			latest, err = updater.UpdateSelf(v, "naibahq/agent")
-		} else {
-			updater, erru := selfupdate.NewAtomGitUpdater(selfupdate.Config{
-				BinaryName: binaryName,
-			})
-			if erru != nil {
-				printf("更新失败: %v", erru)
-				return
-			}
-			latest, err = updater.UpdateSelf(v, "naiba/nezha-agent")
-		}
-	default:
-		updater, erru := selfupdate.NewUpdater(selfupdate.Config{
-			BinaryName: binaryName,
-		})
-		if erru != nil {
-			printf("更新失败: %v", erru)
-			return
-		}
-		latest, err = updater.UpdateSelf(v, "nezhahq/agent")
+	if config.useGiteeToUpgrade || config.useAtomGitToUpgrade {
+		printf("已忽略旧版镜像更新开关，固定使用 GitHub 仓库 %s", selfUpdateRepository(config))
 	}
+	repository := selfUpdateRepository(config)
+	updater, erru := selfupdate.NewUpdater(selfupdate.Config{
+		BinaryName: binaryName,
+	})
+	if erru != nil {
+		printf("更新失败: %v", erru)
+		return
+	}
+	latest, err := updater.UpdateSelf(v, repository)
 
 	if err != nil {
 		printf("更新失败: %v", err)

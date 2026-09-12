@@ -25,6 +25,21 @@ func TestJsonUnmarshalConfig(t *testing.T) {
 	}
 }
 
+func TestValidateConfigDefaultsUpdateRepository(t *testing.T) {
+	config := AgentConfig{UpdateRepository: "  "}
+	if err := ValidateConfig(&config, true); err != nil {
+		t.Fatalf("ValidateConfig: %v", err)
+	}
+	if config.UpdateRepository != DefaultUpdateRepository {
+		t.Fatalf("UpdateRepository = %q, want %q", config.UpdateRepository, DefaultUpdateRepository)
+	}
+
+	config.UpdateRepository = "invalid"
+	if err := ValidateConfig(&config, true); err == nil {
+		t.Fatal("ValidateConfig accepted an invalid update repository")
+	}
+}
+
 // HIGH security regression: Save() must produce a file with mode 0600
 // regardless of any pre-existing mode. os.WriteFile only applies the perm
 // argument on CREATE; if config.yml already exists with 0644 (older

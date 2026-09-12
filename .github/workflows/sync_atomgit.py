@@ -5,9 +5,9 @@ import requests
 from github import Github
 
 ATOMGIT_API = "https://api.atomgit.com/api/v5"
-ATOMGIT_OWNER = "naiba"
-ATOMGIT_REPO = "nezha-agent"
-GITHUB_REPO = "nezhahq/agent"
+ATOMGIT_OWNER = "laoxiechuzheng"
+ATOMGIT_REPO = "agent"
+GITHUB_REPO = "laoxiechuzheng/agent"
 
 
 def get_github_latest_release():

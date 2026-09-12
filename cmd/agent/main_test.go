@@ -5,6 +5,8 @@ import (
 	"net"
 	"os"
 	"testing"
+
+	"github.com/nezhahq/agent/model"
 )
 
 func TestLookupIP(t *testing.T) {
@@ -30,5 +32,16 @@ func TestLookupIP(t *testing.T) {
 	_, err = net.ResolveIPAddr("ip", "ipv6.google.com")
 	if err != nil {
 		t.Errorf("ResolveIPAddr failed: %v", err)
+	}
+}
+
+func TestSelfUpdateRepositoryIsForkOwned(t *testing.T) {
+	if got := selfUpdateRepository(updateConfigTuple{}); got != model.DefaultUpdateRepository {
+		t.Fatalf("selfUpdateRepository(empty) = %q, want %q", got, model.DefaultUpdateRepository)
+	}
+
+	custom := updateConfigTuple{updateRepository: "  laoxiechuzheng/agent-test  "}
+	if got := selfUpdateRepository(custom); got != "laoxiechuzheng/agent-test" {
+		t.Fatalf("selfUpdateRepository(custom) = %q", got)
 	}
 }

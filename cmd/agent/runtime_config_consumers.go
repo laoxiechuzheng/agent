@@ -37,6 +37,7 @@ type taskFeatureGates struct {
 type updateConfigTuple struct {
 	useAtomGitToUpgrade bool
 	useGiteeToUpgrade   bool
+	updateRepository    string
 }
 
 type startupConfigView struct {
@@ -85,6 +86,7 @@ func updateConfigTupleFrom(config *model.AgentConfig) updateConfigTuple {
 	return updateConfigTuple{
 		useAtomGitToUpgrade: config.UseAtomGitToUpgrade,
 		useGiteeToUpgrade:   config.UseGiteeToUpgrade,
+		updateRepository:    config.UpdateRepository,
 	}
 }
 
