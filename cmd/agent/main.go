@@ -441,6 +441,24 @@ type reportStateClient interface {
 	Context() context.Context
 	Send(*pb.State) error
 	Recv() (*pb.Receipt, error)
+	Cancel(error)
+}
+
+const reportStateIOTimeout = 10 * time.Second
+
+var errReportStateIOTimeout = errors.New("ReportSystemState I/O timeout")
+
+// Cancel the stream if Send/Recv cannot make progress; otherwise a half-open
+// gRPC connection can block the reporting loop indefinitely.
+func runReportStateIO(statClient reportStateClient, operation func() error) error {
+	timer := time.AfterFunc(reportStateIOTimeout, func() {
+		statClient.Cancel(errReportStateIOTimeout)
+	})
+	err := operation()
+	if !timer.Stop() {
+		return errors.Join(errReportStateIOTimeout, err)
+	}
+	return err
 }
 
 func reportState(statClient reportStateClient, schedule reportSchedule, config reportConfigTuple) (reportSchedule, error) {
@@ -449,10 +467,16 @@ func reportState(statClient reportStateClient, schedule reportSchedule, config r
 	}
 	if initialized {
 		reportMonitorDependencies.trackNetworkSpeed(config.snapshot)
-		if err := statClient.Send(reportMonitorDependencies.getState(config.snapshot, config.skipConnectionCount, config.skipProcsCount).PB()); err != nil {
+		state := reportMonitorDependencies.getState(config.snapshot, config.skipConnectionCount, config.skipProcsCount).PB()
+		if err := runReportStateIO(statClient, func() error {
+			return statClient.Send(state)
+		}); err != nil {
 			return schedule, err
 		}
-		_, err := statClient.Recv()
+		err := runReportStateIO(statClient, func() error {
+			_, err := statClient.Recv()
+			return err
+		})
 		if err != nil {
 			return schedule, err
 		}

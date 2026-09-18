@@ -141,8 +141,8 @@ func ValidateConfig(c *AgentConfig, isRemoteEdit bool) error {
 
 	if c.IPReportPeriod == 0 {
 		c.IPReportPeriod = 1800
-	} else if c.IPReportPeriod < 30 {
-		c.IPReportPeriod = 30
+	} else if c.IPReportPeriod < 10 {
+		c.IPReportPeriod = 10
 	}
 
 	if c.ReportDelay < 1 || c.ReportDelay > 4 {

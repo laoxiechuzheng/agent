@@ -40,6 +40,24 @@ func TestValidateConfigDefaultsUpdateRepository(t *testing.T) {
 	}
 }
 
+func TestValidateConfigAllowsTenSecondIPReportPeriod(t *testing.T) {
+	config := AgentConfig{IPReportPeriod: 10}
+	if err := ValidateConfig(&config, true); err != nil {
+		t.Fatalf("ValidateConfig: %v", err)
+	}
+	if config.IPReportPeriod != 10 {
+		t.Fatalf("IPReportPeriod = %d, want 10", config.IPReportPeriod)
+	}
+
+	config.IPReportPeriod = 9
+	if err := ValidateConfig(&config, true); err != nil {
+		t.Fatalf("ValidateConfig: %v", err)
+	}
+	if config.IPReportPeriod != 10 {
+		t.Fatalf("IPReportPeriod = %d, want minimum 10", config.IPReportPeriod)
+	}
+}
+
 // HIGH security regression: Save() must produce a file with mode 0600
 // regardless of any pre-existing mode. os.WriteFile only applies the perm
 // argument on CREATE; if config.yml already exists with 0644 (older

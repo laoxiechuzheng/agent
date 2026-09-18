@@ -86,6 +86,8 @@ func (s *reportStateSession) Send(state *pb.State) error { return s.owner.Send(s
 
 func (s *reportStateSession) Recv() (*pb.Receipt, error) { return s.stream.Recv() }
 
+func (s *reportStateSession) Cancel(err error) { s.cancelStream(err) }
+
 func (s *reportStateSession) shutdown(graceContext context.Context, cause error) reportStateShutdownResult {
 	s.shutdownOnce.Do(func() {
 		s.stopCadence()

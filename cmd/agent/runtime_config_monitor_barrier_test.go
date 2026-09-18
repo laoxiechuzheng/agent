@@ -174,6 +174,7 @@ type snapshotReportStateStream struct {
 
 func (s *snapshotReportStateStream) Context() context.Context { return s.ctx }
 func (s *snapshotReportStateStream) Send(*pb.State) error     { return nil }
+func (s *snapshotReportStateStream) Cancel(error)             {}
 func (s *snapshotReportStateStream) Recv() (*pb.Receipt, error) {
 	return &pb.Receipt{}, nil
 }
