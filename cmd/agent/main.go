@@ -723,14 +723,18 @@ func handleIcmpPingTaskWithConfig(gates taskFeatureGates, task *pb.Task, result 
 	if err == nil {
 		stat := pinger.Statistics()
 		if stat.PacketsRecv == 0 {
-			result.Data = "pockets recv 0"
+			result.Data = formatICMPFailureData(ipAddr, "packets recv 0")
 			return
 		}
 		result.Delay = float32(stat.AvgRtt.Microseconds()) / 1000.0
 		result.Successful = true
 	} else {
-		result.Data = err.Error()
+		result.Data = formatICMPFailureData(ipAddr, err.Error())
 	}
+}
+
+func formatICMPFailureData(ipAddr, reason string) string {
+	return fmt.Sprintf("icmp ping target=%s: %s", ipAddr, reason)
 }
 
 func handleHttpGetTaskWithConfig(gates taskFeatureGates, task *pb.Task, result *pb.TaskResult) {
